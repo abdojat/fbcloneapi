@@ -12,7 +12,6 @@ const userRoutes = require('./routes/userRoutes.js');
 const postRoutes = require('./routes/postRoutes.js');
 const friendRoutes = require('./routes/friendRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
-
 const app = express();
 
 app.use(cors());
@@ -26,7 +25,6 @@ app.use('/api/users', userRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/friends', friendRoutes);
 app.use('/api/upload', uploadRoutes);
-
 
 app.get('/api/health', (req, res) => {
     res.status(200).json({ message: 'Server is running' });

@@ -21,7 +21,7 @@ exports.registerUser = async (req, res, next) => {
         });
 
         await user.save();
-        
+
         const token = user.generateAuthToken();
 
         const userResponse = {
@@ -203,5 +203,22 @@ exports.getSavedPosts = async (req, res) => {
         res.json({ success: true, data: user.savedPosts });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Failed to fetch saved posts', error: error.message });
+    }
+};
+
+
+// GET /api/users/search?q=name
+exports.searchUsers = async (req, res) => {
+    const q = req.query.q;
+    if (!q) return res.status(400).json({ message: 'Query is required' });
+
+    try {
+        const users = await User.find({
+            username: { $regex: q, $options: 'i' }
+        }).select('_id username picturePath');
+
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 };
