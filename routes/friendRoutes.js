@@ -15,8 +15,6 @@ const auth = require('../middlewares/auth');
 // /api/friends
 
 router.post('/action',auth,handelActions);
-
-
 router.get('/requests', auth, getFriendRequests);
 router.get('/sentFriendRequests', auth, getSentFriendRequests);
 router.get('/', auth, getFriends);

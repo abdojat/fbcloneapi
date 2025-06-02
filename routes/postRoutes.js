@@ -20,14 +20,14 @@ const auth = require('../middlewares/auth');
 
 router.post('/', auth, createPost);
 router.get('/', auth, getAllPosts);
-router.put('/:id', auth, updatePost); // *
-router.delete('/:id', auth, deletePost); //*
+router.get('/post/:id', getPost); // *
+router.get('/friends/feed', auth, getFriendsPosts);
 router.post('/:id/like', auth, likePost);
 router.post('/:id/unlike', auth, unlikePost);
 router.post('/:id/comments', auth, addComment);
-router.get('/post/:id', getPost); // *
-router.get('/friends/feed', auth, getFriendsPosts);
 router.get('/user/:id', auth, getUserPosts);
+router.delete('/:id', auth, deletePost);
+router.put('/:id', auth, updatePost); // *
 
 
 module.exports = router;

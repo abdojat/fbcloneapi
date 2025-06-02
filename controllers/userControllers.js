@@ -114,7 +114,6 @@ exports.getUserById = async (req, res) => {
     try {
         const user = await User.findById(req.params.id)
             .select('-password -__v -passwordHistory');
-
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
@@ -207,7 +206,6 @@ exports.getSavedPosts = async (req, res) => {
 };
 
 
-// GET /api/users/search?q=name
 exports.searchUsers = async (req, res) => {
     const q = req.query.q;
     if (!q) return res.status(400).json({ message: 'Query is required' });

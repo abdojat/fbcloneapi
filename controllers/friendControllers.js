@@ -2,6 +2,7 @@
 
 const User = require('../models/users');
 const mongoose = require('mongoose');
+const {createNotification}= require('./notificationController')
 
 exports.handelActions = async (req, res) => {
     const { targetUserId, action, requestId } = req.body;
@@ -32,7 +33,13 @@ exports.handelActions = async (req, res) => {
                 });
 
                 await Promise.all([recipient.save(), sender.save()]);
-
+                await createNotification(
+                    targetUserId,
+                    userId,
+                    'friendRequest',
+                    null,
+                    null
+                );
                 return res.status(201).json({ message: 'Friend request sent' });
                 break;
             case 'cancel':
@@ -44,7 +51,13 @@ exports.handelActions = async (req, res) => {
                 }
                 // Remove from sender's sentFriendRequests
                 sender.sentFriendRequests.pull(sentRequest._id);
-
+                await createNotification(
+                    targetUserId,
+                    userId,
+                    'canceled',
+                    null,
+                    null
+                );
                 // Find corresponding friendRequest in recipient's friendRequests
                 const recvRequest = recipient.friendRequests.find(
                     req => req.sender.equals(userId) && req.status === 'pending'
@@ -71,7 +84,6 @@ exports.handelActions = async (req, res) => {
 
                 accRequest.status = 'accepted';
                 if (accSentRequest) accSentRequest.status = 'accepted';
-
                 recipient.sentFriendRequests.pull(accSentRequest);
                 if (accSentRequest) {
                     sender.friendRequests.pull(accRequest);
@@ -79,7 +91,13 @@ exports.handelActions = async (req, res) => {
 
 
                 await Promise.all([recipient.save(), sender.save()]);
-
+                await createNotification(
+                    recipient._id,
+                    userId,
+                    'friendAccepted',
+                    null,
+                    null
+                );
                 return res.status(200).json({
                     message: `Friend request ${action}ed`,
                     status: accRequest.status
@@ -104,7 +122,13 @@ exports.handelActions = async (req, res) => {
                 }
 
                 await Promise.all([recipient.save(), sender.save()]);
-
+                await createNotification(
+                    recipient._id,
+                    userId,
+                    'friendRejected',
+                    null,
+                    null
+                );
                 return res.status(200).json({
                     message: `Friend request ${action}ed`,
                     status: rejRequest.status
@@ -124,12 +148,18 @@ exports.handelActions = async (req, res) => {
                         { $pull: { friends: userId } }
                     )
                 ]);
+                await createNotification(
+                    targetUserId,
+                    userId,
+                    'friendRemoved',
+                    null,
+                    null
+                );
                 return res.status(200).json({ message: 'Friend removed successfully' });
                 break;
             default:
                 return res.status(400).json({ message: 'Invalid action' });
         }
-        res.json({ friends: updatedFriends, requests: updatedRequests });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

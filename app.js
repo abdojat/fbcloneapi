@@ -8,10 +8,12 @@ const bodyParser = require('body-parser');
 
 dotenv.config();
 
-const userRoutes = require('./routes/userRoutes.js');
-const postRoutes = require('./routes/postRoutes.js');
+const userRoutes = require('./routes/userRoutes');
+const postRoutes = require('./routes/postRoutes');
 const friendRoutes = require('./routes/friendRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
+const chatRoutes = require('./routes/chatRoutes');
+const notificationRoutes = require('./routes/notificationRoutes')
 const app = express();
 
 app.use(cors());
@@ -25,6 +27,9 @@ app.use('/api/users', userRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/friends', friendRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/notification', notificationRoutes);
+
 
 app.get('/api/health', (req, res) => {
     res.status(200).json({ message: 'Server is running' });

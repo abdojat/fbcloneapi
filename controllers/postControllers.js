@@ -2,7 +2,7 @@
 
 const Post = require('../models/posts');
 const User = require('../models/users');
-
+const { createNotification } = require('./notificationController')
 
 exports.createPost = async (req, res) => {
     try {
@@ -86,8 +86,16 @@ exports.likePost = async (req, res) => {
             req.params.id,
             { $addToSet: { likes: req.user._id } },
             { new: true }
-        ).populate('author', 'username profilePicture');
-
+        ).populate('author', 'username');
+        if (post.author._id.toString() !== req.user._id.toString()) {
+            await createNotification(
+                post.author._id,
+                req.user._id,
+                'like',
+                post._id,
+                null
+            );
+        }
         res.json({ success: true, data: post });
     } catch (err) {
         res.status(500).json({ success: false, message: 'Server error' });
@@ -100,7 +108,7 @@ exports.unlikePost = async (req, res) => {
             req.params.id,
             { $pull: { likes: req.user._id } },
             { new: true }
-        ).populate('author', 'username profilePicture');
+        ).populate('author', 'username');
 
         res.json({ success: true, data: post });
     } catch (err) {
@@ -124,7 +132,16 @@ exports.addComment = async (req, res) => {
             { new: true }
         )
             .populate('author', 'username profilePicture')
-            .populate('comments.author', 'username profilePicture'); // This is crucial
+            .populate('comments.author', 'username profilePicture');
+        if (post.author._id.toString() !== req.user._id.toString()) {
+            await createNotification(
+                post.author._id,
+                req.user._id,
+                'comment',
+                post._id,
+                req.body.text.substring(0, 50)
+            );
+        }
 
         res.json({ success: true, data: post });
     } catch (err) {
