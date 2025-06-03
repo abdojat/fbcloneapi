@@ -5,6 +5,7 @@ const { connectDB } = require('./config/db');
 const http = require('http');
 const { Server } = require('socket.io');
 const Message = require('./models/message');
+const Notification = require('./models/notification');
 const { initializeNotificationSocket, createNotification, setOnlineUsersMap } = require('./controllers/notificationController');
 
 connectDB();
@@ -12,7 +13,7 @@ connectDB();
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: 'https://fbclone-p5q2.onrender.com',
+        origin: 'https://fbclone-p5q2.onrender.com/',
         methods: ['GET', 'POST', 'PATCH', "DELETE"],
         credentials: true
     },
@@ -37,7 +38,7 @@ io.on('connection', (socket) => {
                 text,
                 timestamp,
             });
-            createNotification(recipient, sender, 'message', null, text.substring(0, 50));
+            createNotification(recipient, sender, 'message', newMessage._id, text.substring(0, 50));
             const newMsg = newMessage;
             const recipientSocketId = onlineUsers.get(data.recipient);
             if (recipientSocketId) {
@@ -53,7 +54,10 @@ io.on('connection', (socket) => {
             { sender, recipient, read: false },
             { read: true, readAt: new Date() }
         );
-
+        await Notification.updateMany(
+            { sender, recipient, isRead: false },
+            { isRead: true, readAt: new Date() }
+        );
         if (onlineUsers.has(sender)) {
             io.to(onlineUsers.get(sender)).emit('readReceipt', { sender, recipient });
         }

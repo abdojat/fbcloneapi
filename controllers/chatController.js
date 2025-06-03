@@ -13,7 +13,7 @@ exports.sendMessage = async (req, res) => {
             text,
             timestamp,
         });
-        createNotification(recipient, sender, 'message', null, `${text.substring(0, 50)}`);
+        createNotification(recipient, sender, 'message', newMessage._id, `${text.substring(0, 50)}`);
         res.status(201).json({ success: true, data: newMessage });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
