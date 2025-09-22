@@ -2,6 +2,7 @@
 
 const User = require('../models/users.js');
 const Post = require('../models/posts');
+const Token = require('../models/token');
 
 exports.registerUser = async (req, res, next) => {
     try {
@@ -160,6 +161,30 @@ exports.updateUserInfo = async (req, res) => {
     }
 };
 
+exports.updateProfilePicture = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        
+        if (!req.file) {
+            return res.status(400).json({ message: 'No image file provided' });
+        }
+
+        const user = await User.findByIdAndUpdate(
+            userId,
+            { picturePath: req.file.path },
+            { new: true, runValidators: true }
+        ).select('-password -__v');
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.status(200).json(user);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 exports.savePost = async (req, res) => {
     try {
         const user = await User.findByIdAndUpdate(
@@ -216,6 +241,36 @@ exports.searchUsers = async (req, res) => {
         }).select('_id username picturePath');
 
         res.json(users);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+exports.getUserStats = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Count posts by user
+        const Post = require('../models/posts');
+        const postCount = await Post.countDocuments({ author: userId });
+
+        // Count friends
+        const friendCount = user.friends.length;
+
+        // Count likes received on user's posts
+        const posts = await Post.find({ author: userId });
+        const likesReceived = posts.reduce((total, post) => total + post.likes.length, 0);
+
+        res.status(200).json({
+            postCount,
+            friendCount,
+            likesReceived
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

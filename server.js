@@ -13,11 +13,18 @@ connectDB();
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: 'https://fbclone-p5q2.onrender.com',
-        methods: ['GET', 'POST', 'PATCH', "DELETE"],
-        credentials: true
+        origin: (origin, callback) => {
+            // Allow requests with no origin (mobile apps, etc.)
+            if (!origin) return callback(null, true);
+            // Allow all origins
+            return callback(null, true);
+        },
+        credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
     },
-    transports: ['websocket', 'polling']
+    transports: ['websocket', 'polling'],
+    allowEIO3: true // Support older clients
 });
 
 let onlineUsers = new Map();
@@ -26,7 +33,9 @@ setOnlineUsersMap(onlineUsers);
 
 io.on('connection', (socket) => {
     socket.on('join', (userId) => {
+        console.log('👋 User joining socket:', { userId, socketId: socket.id });
         onlineUsers.set(userId, socket.id);
+        console.log('📋 Updated online users:', Array.from(onlineUsers.keys()));
         // Broadcast updated online users to all clients
         io.emit('onlineUsers', Array.from(onlineUsers.keys()));
     });

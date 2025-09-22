@@ -11,12 +11,15 @@ const {
     getUserById,
     getUserPicture,
     updateUserInfo,
+    updateProfilePicture,
     savePost,
     unsavePost,
     getSavedPosts,
     searchUsers,
+    getUserStats,
 } = require('../controllers/userControllers.js');
 const auth = require('../middlewares/auth.js');
+const { parser } = require('../config/cloudinary.js');
 
 // /api/users
 
@@ -29,7 +32,9 @@ router.get('/saved-posts', auth, getSavedPosts);
 router.get('/search', auth, searchUsers);
 router.get('/:id', auth, getUserById);
 router.get('/:id/picture', getUserPicture);
+router.get('/:id/stats', auth, getUserStats);
 router.put('/:id', auth, updateUserInfo);
+router.post('/profile-picture', auth, parser.single('profilePicture'), updateProfilePicture);
 router.post('/save-post/:id', auth, savePost);
 router.post('/unsave-post/:id', auth, unsavePost);
 

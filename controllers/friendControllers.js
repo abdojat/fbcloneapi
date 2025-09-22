@@ -113,8 +113,8 @@ exports.handelActions = async (req, res) => {
                     req.recipient.equals(userId) && req.status === 'pending'
                 );
 
-                rejRequest.status = 'accepted';
-                if (rejSentRequest) rejSentRequest.status = 'accepted';
+                rejRequest.status = 'rejected';
+                if (rejSentRequest) rejSentRequest.status = 'rejected';
 
                 recipient.sentFriendRequests.pull(rejSentRequest);
                 if (rejSentRequest) {
@@ -243,6 +243,52 @@ exports.getUserFriends = async (req, res) => {
         }
 
         res.status(200).json(user.friends);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+exports.checkFriendshipStatus = async (req, res) => {
+    try {
+        const currentUserId = req.user._id;
+        const targetUserId = req.params.userId;
+
+        if (currentUserId.toString() === targetUserId) {
+            return res.status(400).json({ message: 'Cannot check friendship status with yourself' });
+        }
+
+        const currentUser = await User.findById(currentUserId);
+        const targetUser = await User.findById(targetUserId);
+
+        if (!targetUser) {
+            return res.status(404).json({ message: 'Target user not found' });
+        }
+
+        // Check if already friends
+        const isFriend = currentUser.friends.includes(targetUserId);
+        if (isFriend) {
+            return res.status(200).json({
+                isFriend: true,
+                hasRequestFrom: false,
+                hasRequestTo: false
+            });
+        }
+
+        // Check if there's a request from target user to current user
+        const hasRequestFrom = currentUser.friendRequests.some(
+            req => req.sender.toString() === targetUserId && req.status === 'pending'
+        );
+
+        // Check if current user has sent request to target user
+        const hasRequestTo = currentUser.sentFriendRequests.some(
+            req => req.recipient.toString() === targetUserId && req.status === 'pending'
+        );
+
+        res.status(200).json({
+            isFriend: false,
+            hasRequestFrom,
+            hasRequestTo
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
