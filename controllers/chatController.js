@@ -127,3 +127,103 @@ exports.markAsRead = async (req, res) => {
     await Message.findByIdAndUpdate(messageId, { read: true });
     res.json({ success: true });
 };
+
+// Edit message controller
+exports.editMessage = async (req, res) => {
+    try {
+        const { messageId } = req.params;
+        const { text } = req.body;
+        const userId = req.user._id;
+
+        // Validate input
+        if (!text || text.trim().length === 0) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Message text is required and cannot be empty' 
+            });
+        }
+
+        // Find the message
+        const message = await Message.findById(messageId);
+        if (!message) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Message not found' 
+            });
+        }
+
+        // Check if the user is the sender (authorization)
+        if (message.sender.toString() !== userId.toString()) {
+            return res.status(403).json({ 
+                success: false, 
+                message: 'You can only edit your own messages' 
+            });
+        }
+
+        // Update the message
+        const updatedMessage = await Message.findByIdAndUpdate(
+            messageId,
+            { 
+                text: text.trim(),
+                edited: true,
+                editedAt: new Date()
+            },
+            { new: true }
+        );
+
+        res.json({ 
+            success: true, 
+            data: updatedMessage,
+            message: 'Message updated successfully' 
+        });
+
+    } catch (error) {
+        console.error('Edit message error:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to edit message',
+            error: error.message 
+        });
+    }
+};
+
+// Delete message controller
+exports.deleteMessage = async (req, res) => {
+    try {
+        const { messageId } = req.params;
+        const userId = req.user._id;
+
+        // Find the message
+        const message = await Message.findById(messageId);
+        if (!message) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Message not found' 
+            });
+        }
+
+        // Check if the user is the sender (authorization)
+        if (message.sender.toString() !== userId.toString()) {
+            return res.status(403).json({ 
+                success: false, 
+                message: 'You can only delete your own messages' 
+            });
+        }
+
+        // Delete the message
+        await Message.findByIdAndDelete(messageId);
+
+        res.json({ 
+            success: true, 
+            message: 'Message deleted successfully' 
+        });
+
+    } catch (error) {
+        console.error('Delete message error:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to delete message',
+            error: error.message 
+        });
+    }
+};

@@ -8,7 +8,9 @@ const {
     sendMessage,
     getMessages,
     getRecentChats,
-    markAsRead
+    markAsRead,
+    editMessage,
+    deleteMessage
 } = require('../controllers/chatController');
 
 // /api/chat
@@ -16,6 +18,8 @@ const {
 router.get('/recent', auth, getRecentChats);
 router.post('/', auth, sendMessage);
 router.patch('/:messageId/read', auth, markAsRead);
+router.patch('/:messageId/edit', auth, editMessage);
+router.delete('/:messageId/delete', auth, deleteMessage);
 router.get('/:recipientId', auth, getMessages);
 
 module.exports = router;
